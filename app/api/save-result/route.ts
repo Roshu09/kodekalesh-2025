@@ -1,40 +1,38 @@
 import { NextResponse } from "next/server"
+import { saveAssessmentResult, hashAnswers } from "@/lib/aws-dynamodb"
+import { randomUUID } from "crypto"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { answers, score, timestamp } = body
+    const { answers, score, level } = body
 
-    // Example DynamoDB integration:
-    /*
-    const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-    const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
-    
-    const client = new DynamoDBClient({ region: process.env.AWS_REGION });
-    const docClient = DynamoDBDocumentClient.from(client);
-    
-    await docClient.send(new PutCommand({
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Item: {
-        id: crypto.randomUUID(),
-        score,
-        timestamp,
-        // Store anonymized data only
-        hashedAnswers: hashData(answers)
-      }
-    }));
-    */
+    console.log("[API] Saving assessment result to DynamoDB...")
 
-    console.log("[API] Saving assessment result:", { score, timestamp })
+    const result = {
+      assessmentId: randomUUID(),
+      score,
+      level,
+      timestamp: new Date().toISOString(),
+      answersHash: hashAnswers(answers),
+    }
 
-    // Return success
+    const success = await saveAssessmentResult(result)
+
+    if (!success) {
+      throw new Error("Failed to save to DynamoDB")
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Result saved successfully",
-      id: `result_${Date.now()}`,
+      message: "Result saved successfully to AWS DynamoDB",
+      id: result.assessmentId,
     })
   } catch (error) {
     console.error("[API] Error saving result:", error)
-    return NextResponse.json({ success: false, error: "Failed to save result" }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Failed to save result" },
+      { status: 500 }
+    )
   }
 }

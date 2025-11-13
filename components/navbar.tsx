@@ -9,13 +9,24 @@ import { cn } from "@/lib/utils"
 
 function LiveClock() {
   const [time, setTime] = useState(new Date())
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const timer = setInterval(() => {
       setTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Clock className="w-4 h-4" />
+        <span className="font-mono">--:--:-- --</span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -61,7 +72,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-sm transition-colors hover:text-foreground",
+                  "text-sm transition-colors hover:text-foreground cursor-pointer",
                   pathname === link.href ? "text-foreground font-medium" : "text-muted-foreground",
                 )}
               >
@@ -75,8 +86,8 @@ export function Navbar() {
             <div className="hidden lg:block">
               <LiveClock />
             </div>
-            <Link href="/assessment" className="hidden md:block">
-              <Button size="sm" className="shadow-lg">
+            <Link href="/assessment">
+              <Button size="sm" className="hidden md:block shadow-lg">
                 Get Started
               </Button>
             </Link>
@@ -95,13 +106,13 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "block py-2 px-4 rounded-lg transition-colors",
+                  "block w-full text-left py-2 px-4 rounded-lg transition-colors",
                   pathname === link.href
                     ? "bg-primary/10 text-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted",
                 )}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
               </Link>

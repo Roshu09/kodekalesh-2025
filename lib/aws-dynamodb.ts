@@ -1,22 +1,15 @@
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb"
+
 /**
  * DynamoDB Helper for MindTrack
  *
  * This module provides utility functions for interacting with AWS DynamoDB
  * to store anonymized assessment results and badge mints.
- *
- * Setup Instructions:
- * 1. Install AWS SDK: npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
- * 2. Configure environment variables in .env:
- *    - AWS_REGION
- *    - AWS_ACCESS_KEY_ID
- *    - AWS_SECRET_ACCESS_KEY
- *    - DYNAMODB_RESULTS_TABLE
- *    - DYNAMODB_BADGES_TABLE
- * 3. Create DynamoDB tables with appropriate schemas
  */
 
 export interface AssessmentResult {
-  id: string
+  assessmentId: string // Changed from 'id' to 'assessmentId' to match DynamoDB table schema
   score: number
   level: "Low" | "Moderate" | "High"
   timestamp: string
@@ -25,39 +18,37 @@ export interface AssessmentResult {
 }
 
 export interface BadgeMint {
-  id: string
+  txHash: string // Changed from 'id' to 'txHash' to match DynamoDB table schema
   transactionHash: string
   walletAddress: string
   network: string
   timestamp: string
 }
 
+// Initialize DynamoDB client
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION || "ap-south-2",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+})
+
+const docClient = DynamoDBDocumentClient.from(client)
+
 /**
  * Save assessment result to DynamoDB
  */
 export async function saveAssessmentResult(result: AssessmentResult): Promise<boolean> {
   try {
-    // Uncomment in production with AWS SDK installed:
-    /*
-    const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-    const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
-    
-    const client = new DynamoDBClient({ 
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-      }
-    });
-    const docClient = DynamoDBDocumentClient.from(client);
-    
-    await docClient.send(new PutCommand({
-      TableName: process.env.DYNAMODB_RESULTS_TABLE,
-      Item: result
-    }));
-    */
+    await docClient.send(
+      new PutCommand({
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || "MindTrackAssessments",
+        Item: result,
+      })
+    )
 
-    console.log("[DynamoDB] Would save assessment result:", result)
+    console.log("[DynamoDB] Saved assessment result:", result.assessmentId) // Updated to use assessmentId
     return true
   } catch (error) {
     console.error("[DynamoDB] Error saving result:", error)
@@ -70,23 +61,14 @@ export async function saveAssessmentResult(result: AssessmentResult): Promise<bo
  */
 export async function saveBadgeMint(badge: BadgeMint): Promise<boolean> {
   try {
-    // Uncomment in production with AWS SDK installed:
-    /*
-    const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-    const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
-    
-    const client = new DynamoDBClient({ 
-      region: process.env.AWS_REGION 
-    });
-    const docClient = DynamoDBDocumentClient.from(client);
-    
-    await docClient.send(new PutCommand({
-      TableName: process.env.DYNAMODB_BADGES_TABLE,
-      Item: badge
-    }));
-    */
+    await docClient.send(
+      new PutCommand({
+        TableName: process.env.DYNAMODB_MINTS_TABLE || "MindTrackMintRecords",
+        Item: badge,
+      })
+    )
 
-    console.log("[DynamoDB] Would save badge mint:", badge)
+    console.log("[DynamoDB] Saved badge mint:", badge.txHash) // Updated to use txHash
     return true
   } catch (error) {
     console.error("[DynamoDB] Error saving badge:", error)
@@ -97,7 +79,7 @@ export async function saveBadgeMint(badge: BadgeMint): Promise<boolean> {
 /**
  * Hash sensitive data before storage
  */
-export function hashAnswers(answers: Record<string, string>): string {
+export function hashAnswers(answers: Record<string, number>): string {
   // Simple hash for demo - use crypto.subtle.digest in production
   return Buffer.from(JSON.stringify(answers)).toString("base64")
 }
