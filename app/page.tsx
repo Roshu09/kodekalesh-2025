@@ -2,48 +2,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Brain, Activity, TrendingUp, Shield, Sparkles, ArrowRight, MessageCircle } from "lucide-react"
+import { Navbar } from "@/components/navbar"
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
-      {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Brain className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              MindTrack
-            </span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link
-              href="#how-it-works"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              How It Works
-            </Link>
-            <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
-            </Link>
-            <Link
-              href="/ai-counselor"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              AI Counselor
-            </Link>
-          </nav>
-          <Link href="/assessment">
-            <Button size="sm" className="shadow-lg">
-              Get Started
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
@@ -70,8 +34,12 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/ai-counselor">
-              <Button size="lg" variant="outline" className="group bg-transparent">
-                <MessageCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+              <Button
+                size="lg"
+                variant="outline"
+                className="shadow-lg group border-accent/50 hover:bg-accent/10 bg-transparent"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
                 Talk to AI Counselor
               </Button>
             </Link>
@@ -113,6 +81,12 @@ export default function HomePage() {
               intensify. Institutions, workplaces, and healthcare systems are consequently unable to provide timely
               interventions, leading to escalated crises and long-term societal burdens.
             </p>
+            <div className="mt-6 p-4 bg-warning/10 border border-warning/20 rounded-lg">
+              <p className="text-sm font-medium text-warning">
+                ⚠️ <strong>Important Notice:</strong> This is a screening tool, not a medical diagnosis. Always consult
+                qualified healthcare professionals for proper evaluation and treatment.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </section>

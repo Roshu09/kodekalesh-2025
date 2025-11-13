@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Brain, ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Navbar } from "@/components/navbar"
 
 const questions = [
   {
@@ -81,11 +81,33 @@ export default function AssessmentPage() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    let score = 0
+    Object.values(answers).forEach((value) => {
+      score += Number.parseInt(value as string)
+    })
+
+    try {
+      const response = await fetch("/api/save-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answers,
+          score,
+          timestamp: new Date().toISOString(),
+        }),
+      })
+
+      if (response.ok) {
+        console.log("[v0] Assessment saved to DynamoDB")
+      }
+    } catch (error) {
+      console.log("[v0] AWS backend not configured yet")
+    }
+
     // Store answers in localStorage
     localStorage.setItem("assessmentAnswers", JSON.stringify(answers))
-    // Navigate to behavior simulator
-    router.push("/behavior-simulator")
+    router.push("/results")
   }
 
   const currentQ = questions[currentQuestion]
@@ -93,25 +115,7 @@ export default function AssessmentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
-      {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Brain className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              MindTrack
-            </span>
-          </Link>
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Assessment Content */}
       <div className="container mx-auto px-4 py-12">
