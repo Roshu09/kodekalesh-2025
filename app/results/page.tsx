@@ -68,6 +68,7 @@ export default function ResultsPage() {
   const [wallet, setWallet] = useState<WalletState>({ connected: false, address: null, walletType: null })
   const [mintedBadge, setMintedBadge] = useState<AptosBadge | null>(null)
   const [minting, setMinting] = useState(false)
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string>("")
 
   useEffect(() => {
     // Get assessment answers
@@ -122,11 +123,22 @@ export default function ResultsPage() {
       ]
     }
 
+    const assessmentId = `assessment_${Date.now()}_${JSON.stringify(answers).slice(0, 20)}`
+    setCurrentAssessmentId(assessmentId)
+
     setData({ score, level, recommendations, breakdown })
 
     const savedBadge = localStorage.getItem("aptosBadge")
-    if (savedBadge) {
+    const savedBadgeAssessmentId = localStorage.getItem("aptosBadgeAssessmentId")
+    
+    // Only load badge if it belongs to the current assessment
+    if (savedBadge && savedBadgeAssessmentId === assessmentId) {
       setMintedBadge(JSON.parse(savedBadge))
+    } else {
+      // Clear old badge data if it's from a different assessment
+      localStorage.removeItem("aptosBadge")
+      localStorage.removeItem("aptosBadgeAssessmentId")
+      setMintedBadge(null)
     }
   }, [])
 
@@ -229,6 +241,7 @@ export default function ResultsPage() {
 
       setMintedBadge(badge)
       localStorage.setItem("aptosBadge", JSON.stringify(badge))
+      localStorage.setItem("aptosBadgeAssessmentId", currentAssessmentId)
 
       try {
         await fetch("/api/save-badge", {

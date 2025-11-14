@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Brain, Activity, TrendingUp, Shield, Sparkles, ArrowRight, MessageCircle } from "lucide-react"
+import { Brain, Activity, TrendingUp, Shield, Sparkles, ArrowRight, MessageCircle } from 'lucide-react'
 import { Navbar } from "@/components/navbar"
 
 export default function HomePage() {
@@ -144,6 +144,12 @@ export default function HomePage() {
               description: "24/7 AI-powered conversational support for immediate mental health assistance",
               icon: "🤖",
               color: "bg-accent/10 text-accent border-accent/20",
+            },
+            {
+              title: "Voice Journal with AWS",
+              description: "Record voice thoughts, transcribe with AWS Transcribe, and get AI sentiment analysis",
+              icon: "🎤",
+              color: "bg-secondary/10 text-secondary border-secondary/20",
             },
           ].map((feature, i) => (
             <Card key={i} className="border-border/50 hover:border-primary/30 transition-all hover:shadow-lg">

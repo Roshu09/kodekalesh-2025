@@ -47,6 +47,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/assessment", label: "Assessment" },
+    { href: "/voice-journal", label: "Voice Journal" },
     { href: "/ai-counselor", label: "AI Counselor" },
     { href: "/results", label: "Results" },
   ]
