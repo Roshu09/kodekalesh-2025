@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Brain, Menu, X, Clock } from "lucide-react"
+import { Brain, Menu, X, Clock, Download } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 function LiveClock() {
@@ -51,6 +51,12 @@ export function Navbar() {
     { href: "/results", label: "Results" },
   ]
 
+  const handleDownloadReport = () => {
+    // Trigger download from results page
+    const event = new CustomEvent('downloadReport')
+    window.dispatchEvent(event)
+  }
+
   return (
     <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -86,11 +92,18 @@ export function Navbar() {
             <div className="hidden lg:block">
               <LiveClock />
             </div>
-            <Link href="/assessment">
-              <Button size="sm" className="hidden md:block shadow-lg">
-                Get Started
+            {pathname === "/results" ? (
+              <Button size="sm" className="hidden md:flex shadow-lg" onClick={handleDownloadReport}>
+                <Download className="w-4 h-4 mr-2" />
+                Download Report
               </Button>
-            </Link>
+            ) : (
+              <Link href="/assessment">
+                <Button size="sm" className="hidden md:block shadow-lg">
+                  Get Started
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -117,6 +130,19 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {pathname === "/results" && (
+              <Button 
+                size="sm" 
+                className="w-full mt-2" 
+                onClick={() => {
+                  handleDownloadReport()
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Report
+              </Button>
+            )}
             <div className="pt-2">
               <LiveClock />
             </div>

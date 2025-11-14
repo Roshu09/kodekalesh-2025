@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, Minus, Award, Clock, ExternalLink } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, Award, Clock, ExternalLink } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -130,6 +130,15 @@ export default function ResultsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    const handleDownload = () => {
+      handleExportPDF()
+    }
+
+    window.addEventListener('downloadReport', handleDownload)
+    return () => window.removeEventListener('downloadReport', handleDownload)
+  }, [data])
+
   const connectWallet = async () => {
     try {
       // Check for Petra wallet
@@ -156,9 +165,20 @@ export default function ResultsPage() {
         return response.address
       }
 
-      alert(
-        "No Aptos wallet found. Please install Petra or Martian wallet extension to mint your wellbeing badge on Aptos Testnet.",
+      const useMockWallet = confirm(
+        "No Aptos wallet extension detected.\n\nWould you like to use Mock Mode for testing?\n\n(For production, install Petra or Martian wallet extension)"
       )
+      
+      if (useMockWallet) {
+        const mockAddress = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`
+        setWallet({
+          connected: true,
+          address: mockAddress,
+          walletType: "petra",
+        })
+        return mockAddress
+      }
+
       return null
     } catch (error) {
       console.error("[v0] Wallet connection error:", error)
@@ -231,36 +251,130 @@ export default function ResultsPage() {
     if (!data) return
 
     try {
-      const printWindow = window.open("", "", "width=800,height=600")
-      if (!printWindow) return
+      const printWindow = window.open("", "_blank", "width=800,height=600")
+      if (!printWindow) {
+        alert("Please allow popups to download the report")
+        return
+      }
 
       const html = `
         <!DOCTYPE html>
         <html>
         <head>
-          <title>MindTrack Health Report</title>
+          <title>MindTrack Health Report - ${new Date().toLocaleDateString()}</title>
           <style>
-            body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-            h1 { color: #0ea5e9; margin-bottom: 10px; }
-            .header { border-bottom: 3px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 30px; }
+            @media print {
+              body { margin: 0; }
+              @page { margin: 1cm; }
+            }
+            body { 
+              font-family: system-ui, -apple-system, sans-serif; 
+              padding: 40px; 
+              max-width: 800px; 
+              margin: 0 auto; 
+              line-height: 1.6;
+              color: #1e293b;
+            }
+            h1 { 
+              color: #0ea5e9; 
+              margin-bottom: 10px; 
+              font-size: 32px;
+            }
+            h2 {
+              color: #334155;
+              margin-top: 30px;
+              margin-bottom: 15px;
+              font-size: 20px;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 8px;
+            }
+            .header { 
+              border-bottom: 3px solid #0ea5e9; 
+              padding-bottom: 20px; 
+              margin-bottom: 30px; 
+            }
             .section { margin-bottom: 30px; }
-            .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 15px 25px; background: #f1f5f9; border-radius: 8px; }
-            .metric-label { font-size: 12px; color: #64748b; text-transform: uppercase; }
-            .metric-value { font-size: 24px; font-weight: bold; color: #0f172a; }
-            .risk-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+            .metric { 
+              display: inline-block; 
+              margin: 10px 20px 10px 0; 
+              padding: 15px 25px; 
+              background: #f1f5f9; 
+              border-radius: 8px; 
+            }
+            .metric-label { 
+              font-size: 12px; 
+              color: #64748b; 
+              text-transform: uppercase; 
+              letter-spacing: 0.5px;
+              margin-bottom: 5px;
+            }
+            .metric-value { 
+              font-size: 24px; 
+              font-weight: bold; 
+              color: #0f172a; 
+            }
+            .risk-badge { 
+              display: inline-block; 
+              padding: 8px 16px; 
+              border-radius: 20px; 
+              font-weight: 600; 
+              font-size: 14px;
+            }
             .risk-low { background: #dcfce7; color: #166534; }
             .risk-moderate { background: #fef3c7; color: #92400e; }
             .risk-high { background: #fee2e2; color: #991b1b; }
-            ul { list-style: none; padding: 0; }
-            li { padding: 10px; margin: 8px 0; background: #f8fafc; border-left: 3px solid #0ea5e9; }
-            .disclaimer { margin-top: 50px; padding: 20px; background: #fef3c7; border-left: 4px solid #f59e0b; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; }
+            ul { list-style: none; padding: 0; margin: 0; }
+            li { 
+              padding: 12px 15px; 
+              margin: 8px 0; 
+              background: #f8fafc; 
+              border-left: 3px solid #0ea5e9; 
+              border-radius: 4px;
+            }
+            .disclaimer { 
+              margin-top: 50px; 
+              padding: 20px; 
+              background: #fef3c7; 
+              border-left: 4px solid #f59e0b; 
+              border-radius: 8px;
+            }
+            .disclaimer strong {
+              color: #92400e;
+            }
+            .footer { 
+              margin-top: 30px; 
+              padding-top: 20px; 
+              border-top: 1px solid #e2e8f0; 
+              font-size: 12px; 
+              color: #64748b; 
+              text-align: center;
+            }
+            .category-breakdown {
+              margin-top: 20px;
+            }
+            .category-item {
+              display: flex;
+              justify-content: space-between;
+              padding: 10px 0;
+              border-bottom: 1px solid #e2e8f0;
+            }
+            .category-item:last-child {
+              border-bottom: none;
+            }
+            .category-name {
+              font-weight: 500;
+              color: #334155;
+            }
+            .category-score {
+              color: #0ea5e9;
+              font-weight: 600;
+            }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>🧠 MindTrack Health Report</h1>
-            <p style="color: #64748b;">Generated on ${new Date().toLocaleString()}</p>
+            <p style="color: #64748b; margin: 5px 0 0 0;">Generated on ${new Date().toLocaleString()}</p>
           </div>
           
           <div class="section">
@@ -272,17 +386,43 @@ export default function ResultsPage() {
               </div>
             </div>
             <div class="metric">
-              <div class="metric-label">Score</div>
+              <div class="metric-label">Total Score</div>
               <div class="metric-value">${data.score}/10</div>
             </div>
             <div class="metric">
-              <div class="metric-label">Wellness</div>
+              <div class="metric-label">Overall Wellness</div>
               <div class="metric-value">${data.level === "Low" ? "85%" : data.level === "Moderate" ? "65%" : "40%"}</div>
             </div>
           </div>
 
           <div class="section">
-            <h2>Recommendations</h2>
+            <h2>Category Breakdown</h2>
+            <div class="category-breakdown">
+              <div class="category-item">
+                <span class="category-name">Sleep Quality</span>
+                <span class="category-score">${100 - data.breakdown.sleep * 50}%</span>
+              </div>
+              <div class="category-item">
+                <span class="category-name">Mood Stability</span>
+                <span class="category-score">${100 - data.breakdown.mood * 50}%</span>
+              </div>
+              <div class="category-item">
+                <span class="category-name">Appetite & Nutrition</span>
+                <span class="category-score">${100 - data.breakdown.appetite * 50}%</span>
+              </div>
+              <div class="category-item">
+                <span class="category-name">Focus & Concentration</span>
+                <span class="category-score">${100 - data.breakdown.focus * 50}%</span>
+              </div>
+              <div class="category-item">
+                <span class="category-name">Social Activity</span>
+                <span class="category-score">${100 - data.breakdown.social * 50}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Personalized Recommendations</h2>
             <ul>
               ${data.recommendations.map((rec, i) => `<li><strong>${i + 1}.</strong> ${rec}</li>`).join("")}
             </ul>
@@ -293,21 +433,27 @@ export default function ResultsPage() {
           </div>
 
           <div class="footer">
-            <p>© 2025 MindTrack - Mental Wellbeing Monitoring System</p>
-            <p>Built for AWS & Aptos Hackathon</p>
+            <p style="margin: 5px 0;"><strong>© 2025 MindTrack</strong> - Mental Wellbeing Monitoring System</p>
+            <p style="margin: 5px 0;">Built with AWS DynamoDB & Aptos Blockchain Integration</p>
+            <p style="margin: 5px 0; color: #94a3b8;">Early Detection Mental Health Assessment Platform</p>
           </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 500);
+            }
+          </script>
         </body>
         </html>
       `
 
       printWindow.document.write(html)
       printWindow.document.close()
-
-      setTimeout(() => {
-        printWindow.print()
-      }, 250)
     } catch (error) {
-      alert("Unable to generate PDF. Please try again.")
+      console.error("[v0] PDF generation error:", error)
+      alert("Unable to generate PDF. Please try again or check if popups are blocked.")
     }
   }
 
@@ -363,9 +509,9 @@ export default function ResultsPage() {
 
   const categoryScores = [
     { name: "Sleep Quality", score: 100 - data.breakdown.sleep * 50, color: "bg-chart-1" },
-    { name: "Mood", score: 100 - data.breakdown.mood * 50, color: "bg-chart-2" },
-    { name: "Appetite", score: 100 - data.breakdown.appetite * 50, color: "bg-chart-3" },
-    { name: "Focus", score: 100 - data.breakdown.focus * 50, color: "bg-chart-4" },
+    { name: "Mood Stability", score: 100 - data.breakdown.mood * 50, color: "bg-chart-2" },
+    { name: "Appetite & Nutrition", score: 100 - data.breakdown.appetite * 50, color: "bg-chart-3" },
+    { name: "Focus & Concentration", score: 100 - data.breakdown.focus * 50, color: "bg-chart-4" },
     { name: "Social Activity", score: 100 - data.breakdown.social * 50, color: "bg-chart-5" },
   ]
 
